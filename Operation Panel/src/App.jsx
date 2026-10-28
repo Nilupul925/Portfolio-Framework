@@ -64,4 +64,24 @@ export default function AdminHub() {
   const [communityActivities, setCommunityActivities] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [messagesList, setMessagesList] = useState([]);
+
+  // ATS CV DATA
+  const [atsCvData, setAtsCvData] = useState({
+    fullName: '',
+    title: '',
+    phone: '',
+    email: '',
+    linkedin: '',
+    address: '',
+    summary: '',
+    hardSkills: [],
+    softSkills: []
+  });
+  const [newHardSkill, setNewHardSkill] = useState('');
+  const [newSoftSkill, setNewSoftSkill] = useState('');
+  const [cvProjects, setCvProjects] = useState([]);
+  const [cvWork, setCvWork] = useState([]);
+  const [cvEducation, setCvEducation] = useState([]);
+  const [cvRefs, setCvRefs] = useState([]);
+
 }
