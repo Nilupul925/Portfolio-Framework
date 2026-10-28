@@ -105,5 +105,127 @@ export default function PortfolioApp() {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 4000);
   };
-  
+
+  // Fetch data from Supabase on component mount
+  useEffect(() => {
+    const fetchCloudData = async () => {
+      if (!supabase) return;
+      try {
+        const { data: profData } = await supabase.from('profile').select('*').eq('id', 1).maybeSingle();
+        if (profData) {
+          setProfile({
+            name: profData.name || '',
+            headline: profData.headline || '',
+            tagline: profData.tagline || '',
+            bio: profData.bio || '',
+            email: profData.email || '',
+            phone: profData.phone || '',
+            location: profData.location || '',
+            github: profData.github || '',
+            linkedin: profData.linkedin || '',
+            avatarUrl: profData.avatar_url || ''
+          });
+        }
+
+        const { data: projData } = await supabase.from('projects').select('*').order('id', { ascending: true });
+        if (projData) {
+          setCaseStudies(projData.map(p => ({
+            id: p.id,
+            title: p.title || 'Not yet included',
+            category: p.category || 'General',
+            status: p.status || 'COMPLETED',
+            summary: p.summary || '',
+            tools: Array.isArray(p.tools) ? p.tools : [],
+            github: p.github || '',
+            proofImageUrl: p.proof_image_url || ''
+          })));
+        }
+
+        const { data: skillData } = await supabase.from('skills').select('*').order('id', { ascending: true });
+        if (skillData) {
+          setSkillsList(skillData.map(s => ({
+            id: s.id,
+            name: s.name || '',
+            category: s.category || 'General',
+            proficiency: s.proficiency || '',
+            logoUrl: s.logo_url || ''
+          })));
+        }
+
+        const { data: eduData } = await supabase.from('education').select('*').order('id', { ascending: true });
+        if (eduData) {
+          setEducationList(eduData.map(e => ({
+            id: e.id,
+            degree: e.degree || '',
+            institution: e.institution || '',
+            period: e.period || '',
+            location: e.location || '',
+            modules: Array.isArray(e.modules) ? e.modules : [],
+            logoUrl: e.logo_url || ''
+          })));
+        }
+
+        const { data: certData } = await supabase.from('certifications').select('*').order('id', { ascending: true });
+        if (certData) {
+          setCertifications(certData.map(c => ({
+            id: c.id,
+            type: c.type || 'badge',
+            title: c.title || '',
+            org: c.org || 'ISSUER',
+            date: c.date || '',
+            credentialUrl: c.credential_url || '',
+            badgeLogoUrl: c.badge_logo_url || '',
+            certImageUrl: c.cert_image_url || ''
+          })));
+        }
+
+        const { data: actData } = await supabase.from('activities').select('*').order('id', { ascending: true });
+        if (actData) setCommunityActivities(actData);
+
+        const { data: testData } = await supabase.from('testimonials').select('*').order('id', { ascending: true });
+        if (testData) setTestimonials(testData);
+
+        const { data: cvMeta } = await supabase.from('cv_metadata').select('*').eq('id', 1).maybeSingle();
+        if (cvMeta) {
+          setAtsCvData({
+            fullName: cvMeta.full_name || '',
+            title: cvMeta.title || '',
+            phone: cvMeta.phone || '',
+            address: cvMeta.address || '',
+            email: cvMeta.email || '',
+            linkedin: cvMeta.linkedin || '',
+            summary: cvMeta.summary || '',
+            hardSkills: Array.isArray(cvMeta.hard_skills) ? cvMeta.hard_skills : [],
+            softSkills: Array.isArray(cvMeta.soft_skills) ? cvMeta.soft_skills : []
+          });
+        }
+
+        const { data: pData } = await supabase.from('cv_projects').select('*').order('id', { ascending: true });
+        if (pData) setCvProjects(pData);
+
+        const { data: wData } = await supabase.from('cv_work').select('*').order('id', { ascending: true });
+        if (wData) setCvWork(wData);
+
+        const { data: eData } = await supabase.from('cv_education').select('*').order('id', { ascending: true });
+        if (eData) setCvEducation(eData);
+
+        const { data: rData } = await supabase.from('cv_references').select('*').order('id', { ascending: true });
+        if (rData) setCvRefs(rData);
+
+        const ownerName = profData?.name || 'Portfolio';
+        setBotMessages([
+          {
+            sender: 'bot',
+            text: `Hello! I am ${ownerName}'s Portfolio AI Assistant. Ask me about projects, technical skills, education, digital badges, certificates, or ATS resume details!`
+          }
+        ]);
+      } catch (err) {
+        console.error("Error fetching from Supabase:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCloudData();
+  }, []);
 }
