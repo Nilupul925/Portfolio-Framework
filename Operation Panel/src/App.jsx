@@ -23,5 +23,11 @@ const RefreshCw = createIcon(<><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74
 
 //The AdminHub component is the main component for the admin panel. It will contain the logic and UI for managing the portfolio images and other admin functionalities.
 export default function AdminHub() {
+// State variables for managing session, authentication status, email, password, and login state
+  const [session, setSession] = useState(null);
+  const [isAuthChecking, setIsAuthChecking] = useState(Boolean(supabase));
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
 }
