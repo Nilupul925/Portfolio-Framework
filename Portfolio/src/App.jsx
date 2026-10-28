@@ -50,3 +50,8 @@ const ensureExternalUrl = (url) => {
   if (!trimmed) return '#';
   return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 };
+
+// PortfolioApp component
+export default function PortfolioApp() {
+
+}
