@@ -54,4 +54,56 @@ const ensureExternalUrl = (url) => {
 // PortfolioApp component
 export default function PortfolioApp() {
 
+  const [isLoading, setIsLoading] = useState(!!supabase);
+  const [toastMsg, setToastMsg] = useState('');
+  const [isErrorToast, setIsErrorToast] = useState(false);
+
+  // Portfolio State
+  const [profile, setProfile] = useState({
+    name: '', headline: '', tagline: '', bio: '', email: '', phone: '', location: '', github: '', linkedin: '', avatarUrl: ''
+  });
+  const [caseStudies, setCaseStudies] = useState([]);
+  const [skillsList, setSkillsList] = useState([]);
+  const [educationList, setEducationList] = useState([]);
+  const [certifications, setCertifications] = useState([]);
+  const [communityActivities, setCommunityActivities] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
+
+  // ATS CV State
+  const [atsCvData, setAtsCvData] = useState({
+    fullName: '', title: '', phone: '', address: '', email: '', linkedin: '', summary: '', hardSkills: [], softSkills: []
+  });
+  const [cvProjects, setCvProjects] = useState([]);
+  const [cvWork, setCvWork] = useState([]);
+  const [cvEducation, setCvEducation] = useState([]);
+  const [cvRefs, setCvRefs] = useState([]);
+
+  // Navigation & Filtering
+  const [activeNav, setActiveNav] = useState('HOME');
+  const [projectCategory, setProjectCategory] = useState('All');
+  const [certOrgFilter, setCertOrgFilter] = useState('All');
+  const [showCvDropdown, setShowCvDropdown] = useState(false);
+
+  // Contact Form State
+  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+  const [isSendingMsg, setIsSendingMsg] = useState(false);
+
+  // Chatbot State
+  const [isBotOpen, setIsBotOpen] = useState(false);
+  const [botMessages, setBotMessages] = useState([
+    {
+      sender: 'bot',
+      text: 'Hello! I am your Portfolio AI Assistant. Ask me about projects, technical skills, work experience, education, digital badges, certificates, or ATS resume details!'
+    }
+  ]);
+  const [botInput, setBotInput] = useState('');
+  const [isBotTyping, setIsBotTyping] = useState(false);
+  const botScrollRef = useRef(null);
+
+  const triggerToast = (msg, isError = false) => {
+    setIsErrorToast(isError);
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 4000);
+  };
+  
 }
