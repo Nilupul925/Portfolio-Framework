@@ -313,4 +313,55 @@ export default function AdminHub() {
       triggerToast(`Logout failed: ${err.message}`, true);
     }
   };
+
+  // Function to handle image uploads to Supabase Storage with a fallback to Data URL
+  const handleCloudImageUpload = async (file, callback) => {
+    if (!file) return;
+
+    // Check file size (max 5MB recommended)
+    if (file.size > 5 * 1024 * 1024) {
+      triggerToast("Image file size exceeds 5MB limit. Please choose a smaller image.", true);
+      return;
+    }
+
+    setIsUploading(true);
+    triggerToast('Uploading image...');
+
+    const fileExt = file.name.split('.').pop();
+    const sanitizedName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+
+    try {
+      if (!supabase) throw new Error("Supabase unavailable");
+
+      const { error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(sanitizedName, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(sanitizedName);
+
+      if (data?.publicUrl) {
+        callback(data.publicUrl);
+        triggerToast('Image uploaded to Supabase Storage!');
+      } else {
+        throw new Error("Could not retrieve public image URL.");
+      }
+    } catch (error) {
+      console.warn('Storage bucket upload failed, using Data URL fallback:', error);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        callback(e.target.result);
+        triggerToast('Image attached (Local Data URL fallback).');
+      };
+      reader.onerror = () => {
+        triggerToast("Failed to read image file.", true);
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 }
