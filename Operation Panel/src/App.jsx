@@ -95,4 +95,16 @@ export default function AdminHub() {
       setToastMsg('');
     }, 4000);
   };
+
+  // Keyboard shortcut for closing modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isModalOpen) {
+        setIsModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isModalOpen]);
+
 }
