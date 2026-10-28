@@ -289,4 +289,81 @@ export default function PortfolioApp() {
       setIsBotTyping(false);
     }, 400);
   };
+
+  // Handle sending a message from the contact form
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!contactForm.name.trim() || !contactForm.email.trim() || !contactForm.message.trim()) return;
+
+    if (!supabase) {
+      triggerToast('Database client unavailable. Please contact directly via email.', true);
+      return;
+    }
+
+    setIsSendingMsg(true);
+    try {
+      const messagePayload = {
+        sender_name: contactForm.name.trim(),
+        sender_email: contactForm.email.trim(),
+        message: contactForm.message.trim()
+      };
+      
+      let { error } = await supabase.from('messages').insert([messagePayload]);
+      if (error && error.message && error.message.includes('null value in column "id"')) {
+        const fallbackRes = await supabase.from('messages').insert([{ ...messagePayload, id: Date.now() }]);
+        error = fallbackRes.error;
+      }
+
+      if (error) throw error;
+      triggerToast('Message sent directly to Admin Inbox!');
+      setContactForm({ name: '', email: '', message: '' });
+    } catch (err) {
+      console.error('Error sending message:', err);
+      triggerToast(`Failed to send message: ${err.message || 'Please reach out via email.'}`, true);
+    } finally {
+      setIsSendingMsg(false);
+    }
+  };
+
+  // Update active navigation based on scroll position
+  useEffect(() => {
+    const sections = ['home', 'projects', 'skills', 'education', 'certificates', 'community', 'testimonials', 'contact'];
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 220;
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const sectionId = sections[i];
+        const el = document.getElementById(sectionId);
+        if (el && scrollPosition >= el.offsetTop) {
+          setActiveNav(sectionId.toUpperCase());
+          break;
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Filter lists based on selected categories
+  const dynamicProjectCategories = ['All', ...Array.from(new Set(caseStudies.map(p => p.category).filter(Boolean)))];
+  const filteredProjects = projectCategory === 'All' ? caseStudies : caseStudies.filter(p => p.category === projectCategory);
+
+  const dynamicCertOrgs = ['All', ...Array.from(new Set(certifications.map(c => c.org?.toUpperCase()).filter(Boolean)))];
+  const filteredCerts = certOrgFilter === 'All' ? certifications : certifications.filter(c => c.org?.toUpperCase() === certOrgFilter);
+
+  const filteredBadges = filteredCerts.filter(c => c.type === 'badge');
+  const filteredCertificates = filteredCerts.filter(c => c.type === 'certificate');
+
+  const dynamicSkillCategories = Array.from(new Set(skillsList.map(s => s.category).filter(Boolean)));
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#070b14] flex flex-col items-center justify-center text-cyan-400 font-mono space-y-4">
+        <div className="w-10 h-10 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+        <span className="text-sm tracking-wider animate-pulse">Loading Portfolio from Supabase...</span>
+      </div>
+    );
+  }
+
+  
 }
