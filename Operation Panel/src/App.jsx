@@ -241,4 +241,76 @@ export default function AdminHub() {
       setIsLoading(false);
     }
   };
+
+  // Authentication state management
+  useEffect(() => {
+    if (!supabase) return;
+
+    let isMounted = true;
+
+    // Check existing session once
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+      setSession(session);
+      setIsAuthChecking(false);
+      if (session) {
+        fetchData();
+      }
+    }).catch(err => {
+      console.error("Session verification error:", err);
+      if (isMounted) setIsAuthChecking(false);
+    });
+
+    // Listen for subsequent auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (!isMounted) return;
+      setSession(newSession);
+      if (event === 'SIGNED_IN' && newSession) {
+        fetchData();
+      }
+      if (event === 'SIGNED_OUT') {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!supabase) {
+      triggerToast("Supabase client unavailable. Check environment variables.", true);
+      return;
+    }
+    setIsLoggingIn(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim()
+      });
+      if (error) {
+        triggerToast(error.message, true);
+      } else if (data?.session) {
+        triggerToast("Login successful!");
+      }
+    } catch (err) {
+      triggerToast(err.message || "Failed to log in", true);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (!supabase) return;
+    try {
+      await supabase.auth.signOut();
+      setSession(null);
+      triggerToast("Logged out successfully.");
+    } catch (err) {
+      triggerToast(`Logout failed: ${err.message}`, true);
+    }
+  };
 }
