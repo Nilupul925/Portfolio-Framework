@@ -30,4 +30,11 @@ export default function AdminHub() {
   const [password, setPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
+  // APP STATE
+  const [toastMsg, setToastMsg] = useState('');
+  const [isErrorToast, setIsErrorToast] = useState(false);
+  const toastTimeoutRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 }
