@@ -107,4 +107,138 @@ export default function AdminHub() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isModalOpen]);
 
+  // Fetch data from Supabase on component mount
+  const fetchData = async () => {
+    if (!supabase) {
+      setIsLoading(false);
+      triggerToast("Supabase client unavailable. Check environment variables.", true);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const results = await Promise.allSettled([
+        supabase.from('profile').select('*').eq('id', 1).maybeSingle(),
+        supabase.from('projects').select('*').order('id', { ascending: true }),
+        supabase.from('skills').select('*').order('id', { ascending: true }),
+        supabase.from('education').select('*').order('id', { ascending: true }),
+        supabase.from('certifications').select('*').order('id', { ascending: true }),
+        supabase.from('activities').select('*').order('id', { ascending: true }),
+        supabase.from('testimonials').select('*').order('id', { ascending: true }),
+        supabase.from('messages').select('*').order('id', { ascending: false }),
+        supabase.from('cv_metadata').select('*').eq('id', 1).maybeSingle(),
+        supabase.from('cv_projects').select('*').order('id', { ascending: true }),
+        supabase.from('cv_work').select('*').order('id', { ascending: true }),
+        supabase.from('cv_education').select('*').order('id', { ascending: true }),
+        supabase.from('cv_references').select('*').order('id', { ascending: true }),
+      ]);
+
+      const [
+        profRes, projRes, skillRes, eduRes, certRes,
+        actRes, testRes, msgRes, cvMetaRes, cvProjRes,
+        cvWorkRes, cvEduRes, cvRefRes
+      ] = results;
+
+      if (profRes.status === 'fulfilled' && profRes.value.data) {
+        const p = profRes.value.data;
+        setProfile({
+          name: p.name || '',
+          headline: p.headline || '',
+          tagline: p.tagline || '',
+          bio: p.bio || '',
+          phone: p.phone || '',
+          email: p.email || '',
+          linkedin: p.linkedin || '',
+          github: p.github || '',
+          location: p.location || '',
+          avatarUrl: p.avatar_url || ''
+        });
+      }
+
+      if (projRes.status === 'fulfilled' && projRes.value.data) {
+        setCaseStudies(projRes.value.data.map(p => ({
+          ...p,
+          tools: Array.isArray(p.tools) ? p.tools : [],
+          proofImageUrl: p.proof_image_url || ''
+        })));
+      }
+
+      if (skillRes.status === 'fulfilled' && skillRes.value.data) {
+        setSkillsList(skillRes.value.data.map(s => ({
+          ...s,
+          logoUrl: s.logo_url || ''
+        })));
+      }
+
+      if (eduRes.status === 'fulfilled' && eduRes.value.data) {
+        setEducationList(eduRes.value.data.map(e => ({
+          ...e,
+          modules: Array.isArray(e.modules) ? e.modules : [],
+          logoUrl: e.logo_url || ''
+        })));
+      }
+
+      if (certRes.status === 'fulfilled' && certRes.value.data) {
+        setCertifications(certRes.value.data.map(c => ({
+          ...c,
+          credentialUrl: c.credential_url || '',
+          badgeLogoUrl: c.badge_logo_url || '',
+          certImageUrl: c.cert_image_url || ''
+        })));
+      }
+
+      if (actRes.status === 'fulfilled' && actRes.value.data) {
+        setCommunityActivities(actRes.value.data);
+      }
+
+      if (testRes.status === 'fulfilled' && testRes.value.data) {
+        setTestimonials(testRes.value.data);
+      }
+
+      if (msgRes.status === 'fulfilled' && msgRes.value.data) {
+        setMessagesList(msgRes.value.data);
+      }
+
+      if (cvMetaRes.status === 'fulfilled' && cvMetaRes.value.data) {
+        const m = cvMetaRes.value.data;
+        setAtsCvData({
+          fullName: m.full_name || '',
+          title: m.title || '',
+          phone: m.phone || '',
+          email: m.email || '',
+          linkedin: m.linkedin || '',
+          address: m.address || '',
+          summary: m.summary || '',
+          hardSkills: Array.isArray(m.hard_skills) ? m.hard_skills : [],
+          softSkills: Array.isArray(m.soft_skills) ? m.soft_skills : []
+        });
+      }
+
+      if (cvProjRes.status === 'fulfilled' && cvProjRes.value.data) {
+        setCvProjects(cvProjRes.value.data);
+      }
+
+      if (cvWorkRes.status === 'fulfilled' && cvWorkRes.value.data) {
+        setCvWork(cvWorkRes.value.data);
+      }
+
+      if (cvEduRes.status === 'fulfilled' && cvEduRes.value.data) {
+        setCvEducation(cvEduRes.value.data.map(e => ({
+          ...e,
+          keyPoints: e.key_points || ''
+        })));
+      }
+
+      if (cvRefRes.status === 'fulfilled' && cvRefRes.value.data) {
+        setCvRefs(cvRefRes.value.data);
+      }
+
+    } catch (error) {
+      console.error("Fetch error:", error);
+      triggerToast("Error syncing with Supabase.", true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 }
