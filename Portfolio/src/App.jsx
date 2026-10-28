@@ -228,4 +228,65 @@ export default function PortfolioApp() {
 
     fetchCloudData();
   }, []);
+
+  // Scroll to the bottom of the bot messages when new messages are added or when the bot is typing
+  useEffect(() => {
+    botScrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [botMessages, isBotTyping]);
+
+  const handleBotSubmit = (e) => {
+    e.preventDefault();
+    if (!botInput.trim()) return;
+    const query = botInput.trim();
+    setBotMessages(prev => [...prev, { sender: 'user', text: query }]);
+    setBotInput('');
+    setIsBotTyping(true);
+
+    setTimeout(() => {
+      const q = query.toLowerCase();
+      let reply = '';
+      const candidateName = profile.name || 'The candidate';
+
+      if (q.includes('who is') || q.includes('who are you') || q.includes('about')) {
+        reply = profile.bio
+          ? `${candidateName} — ${profile.headline || 'Specialist'}.\n\n${profile.bio}`
+          : `${candidateName}'s profile bio is not yet included.`;
+      } else if (q.includes('cv') || q.includes('resume') || q.includes('ats')) {
+        reply = `${candidateName}'s ATS Resume is available right here. Click 'View My Resume' in the top section to inspect or download the PDF.`;
+      } else if (q.includes('work') || q.includes('experience') || q.includes('job') || q.includes('career') || q.includes('employment') || q.includes('role')) {
+        reply = cvWork.length > 0
+          ? `Work Experience:\n${cvWork.map(w => `• ${w.role} at ${w.company} (${w.period})${w.location ? ` - ${w.location}` : ''}${w.description ? `\n  ${w.description}` : ''}`).join('\n\n')}`
+          : "Work experience details are not yet included in the CV database.";
+      } else if (q.includes('education') || q.includes('degree') || q.includes('university') || q.includes('school')) {
+        const edu = educationList[0] || cvEducation[0];
+        if (edu && (edu.degree || edu.institution)) {
+          const modText = edu.modules && edu.modules.length > 0
+            ? `\n• Modules: ${edu.modules.join(', ')}`
+            : (edu.key_points || edu.keyPoints ? `\n• Highlights: ${edu.key_points || edu.keyPoints}` : '');
+          reply = `Education:\n• ${edu.degree || 'Not yet included'} at ${edu.institution || 'Not yet included'} (${edu.period || 'N/A'})${modText}`;
+        } else {
+          reply = "Education details are not yet included in the database.";
+        }
+      } else if (q.includes('skill') || q.includes('tech') || q.includes('tool')) {
+        reply = skillsList.length > 0
+          ? `Technical Toolkit:\n${skillsList.map(s => `• ${s.name} (${s.category})`).join('\n')}`
+          : "Skills and tools are not yet included in the database.";
+      } else if (q.includes('project') || q.includes('case study') || q.includes('github')) {
+        reply = caseStudies.length > 0
+          ? `Featured Case Studies:\n${caseStudies.map((p, i) => `${i + 1}. ${p.title} [${p.category}]${p.github ? `\n   Repo: ${p.github}` : ''}`).join('\n')}`
+          : "Project case studies are not yet included.";
+      } else if (q.includes('cert') || q.includes('badge') || q.includes('aws') || q.includes('cisco')) {
+        reply = certifications.length > 0
+          ? `Credentials:\n${certifications.map(c => `• ${c.title} (${c.org}) [${(c.type || 'badge').toUpperCase()}]`).join('\n')}`
+          : "Certifications and badges are not yet included.";
+      } else if (q.includes('contact') || q.includes('email') || q.includes('phone') || q.includes('location')) {
+        reply = `Contact Channels:\n• Phone: ${profile.phone || 'Not yet included'}\n• Email: ${profile.email || 'Not yet included'}\n• LinkedIn: ${profile.linkedin || 'Not yet included'}\n• Location: ${profile.location || 'Not yet included'}`;
+      } else {
+        reply = `I am connected to ${candidateName}'s live Supabase portfolio. Try asking about "projects", "skills", "experience", "education", "badges", "CV", or "contact"!`;
+      }
+
+      setBotMessages(prev => [...prev, { sender: 'bot', text: reply }]);
+      setIsBotTyping(false);
+    }, 400);
+  };
 }
