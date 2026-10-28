@@ -689,4 +689,69 @@ export default function AdminHub() {
     setAtsCvData({ ...atsCvData, softSkills: [...atsCvData.softSkills, trimmed] });
     setNewSoftSkill('');
   };
+
+  // Render a loading screen while checking authentication
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-[#070b14] flex flex-col items-center justify-center text-cyan-400 font-mono text-sm gap-3">
+        <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+        <span>Verifying Security Credentials...</span>
+      </div>
+    );
+  }
+
+  // Render the login form if no session is present
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-[#070b14] flex items-center justify-center text-slate-100 font-sans px-4">
+        {toastMsg && (
+          <div className={`fixed top-5 right-5 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl border font-mono text-xs shadow-2xl animate-in fade-in ${
+            isErrorToast ? 'bg-rose-950 border-rose-500/40 text-rose-300' : 'bg-emerald-950 border-emerald-500/40 text-emerald-300'
+          }`}>
+            {isErrorToast ? <AlertCircle className="w-4 h-4 shrink-0" /> : <Check className="w-4 h-4 shrink-0" />}
+            <span>{toastMsg}</span>
+          </div>
+        )}
+        <div className="max-w-md w-full bg-slate-900/60 border border-slate-800 p-8 rounded-2xl shadow-2xl">
+          <div className="flex items-center gap-3 mb-8 justify-center">
+            <div className="w-10 h-10 rounded-xl bg-cyan-950 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+              <LayoutDashboard className="w-5 h-5" />
+            </div>
+            <h1 className="text-xl font-bold font-mono tracking-wide">ADMIN LOGIN</h1>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="text-slate-400 text-xs font-mono mb-1 block">Admin Email</label>
+              <input 
+                type="email" 
+                required 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:outline-none focus:border-cyan-500"
+                placeholder="admin@example.com"
+              />
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs font-mono mb-1 block">Password</label>
+              <input 
+                type="password" 
+                required 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:outline-none focus:border-cyan-500"
+                placeholder="••••••••"
+              />
+            </div>
+            <button 
+              type="submit" 
+              disabled={isLoggingIn}
+              className="w-full py-3 mt-4 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-950 font-bold rounded-xl cursor-pointer transition-colors flex justify-center items-center gap-2"
+            >
+              {isLoggingIn ? 'Authenticating...' : 'Secure Login'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 }
