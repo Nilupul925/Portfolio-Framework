@@ -364,4 +364,74 @@ export default function AdminHub() {
       setIsUploading(false);
     }
   };
+
+  // Function to save profile data and cv metadata to Supabase
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    if (!supabase) {
+      triggerToast("Supabase client unavailable.", true);
+      return;
+    }
+    setIsSubmitting(true);
+    const payload = {
+      id: 1,
+      name: profile.name.trim(),
+      headline: profile.headline.trim(),
+      tagline: profile.tagline.trim(),
+      bio: profile.bio.trim(),
+      phone: profile.phone.trim(),
+      email: profile.email.trim(),
+      linkedin: profile.linkedin.trim(),
+      github: profile.github.trim(),
+      location: profile.location.trim(),
+      avatar_url: profile.avatarUrl
+    };
+
+    try {
+      const { error } = await supabase.from('profile').upsert(payload, { onConflict: 'id' });
+      if (!error) {
+        triggerToast('Profile saved to Cloud DB!');
+      } else {
+        triggerToast(`Failed to save profile: ${error.message}`, true);
+      }
+    } catch (err) {
+      triggerToast(`Network error: ${err.message}`, true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveCvMeta = async (e) => {
+    e.preventDefault();
+    if (!supabase) {
+      triggerToast("Supabase client unavailable.", true);
+      return;
+    }
+    setIsSubmitting(true);
+    const payload = {
+      id: 1,
+      full_name: atsCvData.fullName.trim(),
+      title: atsCvData.title.trim(),
+      phone: atsCvData.phone.trim(),
+      email: atsCvData.email.trim(),
+      linkedin: atsCvData.linkedin.trim(),
+      address: atsCvData.address.trim(),
+      summary: atsCvData.summary.trim(),
+      hard_skills: atsCvData.hardSkills,
+      soft_skills: atsCvData.softSkills
+    };
+
+    try {
+      const { error } = await supabase.from('cv_metadata').upsert(payload, { onConflict: 'id' });
+      if (!error) {
+        triggerToast('ATS CV Metadata & Skills saved to DB!');
+      } else {
+        triggerToast(`Failed to save CV Metadata: ${error.message}`, true);
+      }
+    } catch (err) {
+      triggerToast(`Network error: ${err.message}`, true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 }
