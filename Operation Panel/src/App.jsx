@@ -37,4 +37,11 @@ export default function AdminHub() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Modals & Forms
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState('project');
+  const [editingItem, setEditingItem] = useState(null);
+  const [formData, setFormData] = useState({});
+
 }
