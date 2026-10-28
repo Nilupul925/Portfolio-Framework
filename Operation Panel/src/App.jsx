@@ -84,4 +84,15 @@ export default function AdminHub() {
   const [cvEducation, setCvEducation] = useState([]);
   const [cvRefs, setCvRefs] = useState([]);
 
+  // Toast handler with timer cleanup
+  const triggerToast = (msg, isError = false) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    setIsErrorToast(isError);
+    setToastMsg(msg);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMsg('');
+    }, 4000);
+  };
 }
