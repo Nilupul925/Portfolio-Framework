@@ -434,4 +434,259 @@ export default function AdminHub() {
       setIsSubmitting(false);
     }
   };
+
+  // Function to open the CRUD modal for adding or editing records
+  const openCrudModal = (type, item = null) => {
+    setModalType(type);
+    setEditingItem(item);
+
+    if (!item) {
+      if (type === 'project') setFormData({ title: '', category: '', status: 'COMPLETED', summary: '', tools: '', github: '', proofImageUrl: '' });
+      if (type === 'skill') setFormData({ name: '', category: '', proficiency: 'Advanced', logoUrl: '' });
+      if (type === 'education') setFormData({ degree: '', institution: '', period: '', location: '', modules: '', logoUrl: '' });
+      if (type === 'cert') setFormData({ type: 'badge', title: '', org: '', date: '', credentialUrl: '', badgeLogoUrl: '', certImageUrl: '' });
+      if (type === 'activity') setFormData({ type: 'Volunteering & Community', title: '', entity: '', period: '', description: '' });
+      if (type === 'testimonial') setFormData({ quote: '', author: '', role: '' });
+      if (type === 'cv_project') setFormData({ title: '', date: '', summary: '' });
+      if (type === 'cv_work') setFormData({ role: '', company: '', location: '', period: '', description: '' });
+      if (type === 'cv_education') setFormData({ degree: '', institution: '', period: '', location: '', keyPoints: '' });
+      if (type === 'cv_ref') setFormData({ name: '', designation: '', institution: '', contact: '' });
+    } else {
+      const data = { ...item };
+      if (type === 'project') data.tools = Array.isArray(item.tools) ? item.tools.join(', ') : (item.tools || '');
+      if (type === 'education') data.modules = Array.isArray(item.modules) ? item.modules.join(', ') : (item.modules || '');
+      if (type === 'cv_education') data.keyPoints = item.keyPoints || item.key_points || '';
+      setFormData(data);
+    }
+    setIsModalOpen(true);
+  };
+
+  const saveRecord = async (table, payload, isEdit, editId) => {
+    if (!supabase) throw new Error('Supabase client unavailable. Please check your credentials.');
+
+    if (isEdit) {
+      const { data, error } = await supabase.from(table).update(payload).eq('id', editId).select().maybeSingle();
+      if (error) throw error;
+      return data || { ...payload, id: editId };
+    } else {
+      // Try insert without manual id so PostgreSQL identity generates it
+      const { data, error } = await supabase.from(table).insert([payload]).select().maybeSingle();
+      if (!error && data) {
+        return data;
+      }
+
+      // Only fallback if the error is specifically due to a missing/null ID in non-auto-incrementing schemas
+      if (error && error.message && (error.message.includes('null value in column "id"') || error.message.includes('violates not-null constraint'))) {
+        const fallbackId = Date.now();
+        const { data: fallbackData, error: fallbackError } = await supabase.from(table).insert([{ ...payload, id: fallbackId }]).select().maybeSingle();
+        if (fallbackError) throw fallbackError;
+        return fallbackData || { ...payload, id: fallbackId };
+      }
+
+      if (error) throw error;
+      return data || payload;
+    }
+  };
+
+  const submitCrudModal = async (e) => {
+    e.preventDefault();
+    if (!supabase) {
+      triggerToast("Supabase client unavailable.", true);
+      return;
+    }
+
+    setIsSubmitting(true);
+    const isEdit = !!editingItem;
+    const editId = isEdit ? editingItem.id : null;
+
+    try {
+      if (modalType === 'project') {
+        const parsedTools = Array.isArray(formData.tools) 
+          ? formData.tools 
+          : (formData.tools || '').split(',').map(t => t.trim()).filter(Boolean);
+        const payload = {
+          title: (formData.title || '').trim(),
+          category: (formData.category || '').trim(),
+          status: formData.status || 'COMPLETED',
+          summary: (formData.summary || '').trim(),
+          github: (formData.github || '').trim(),
+          proof_image_url: formData.proofImageUrl || '',
+          tools: parsedTools
+        };
+        const saved = await saveRecord('projects', payload, isEdit, editId);
+        const newStateObj = { ...saved, proofImageUrl: saved.proof_image_url || payload.proof_image_url, tools: parsedTools };
+        setCaseStudies(prev => isEdit ? prev.map(i => i.id === editId ? { ...i, ...newStateObj } : i) : [...prev, newStateObj]);
+        triggerToast(`Project ${isEdit ? 'Updated' : 'Added'}!`);
+      }
+      else if (modalType === 'skill') {
+        const payload = {
+          name: (formData.name || '').trim(),
+          category: (formData.category || '').trim(),
+          proficiency: formData.proficiency || 'Advanced',
+          logo_url: formData.logoUrl || ''
+        };
+        const saved = await saveRecord('skills', payload, isEdit, editId);
+        const newStateObj = { ...saved, logoUrl: saved.logo_url || payload.logo_url };
+        setSkillsList(prev => isEdit ? prev.map(i => i.id === editId ? { ...i, ...newStateObj } : i) : [...prev, newStateObj]);
+        triggerToast(`Tool/Skill ${isEdit ? 'Updated' : 'Added'}!`);
+      }
+      else if (modalType === 'education') {
+        const parsedModules = Array.isArray(formData.modules) 
+          ? formData.modules 
+          : (formData.modules || '').split(',').map(t => t.trim()).filter(Boolean);
+        const payload = {
+          degree: (formData.degree || '').trim(),
+          institution: (formData.institution || '').trim(),
+          period: (formData.period || '').trim(),
+          location: (formData.location || '').trim(),
+          logo_url: formData.logoUrl || '',
+          modules: parsedModules
+        };
+        const saved = await saveRecord('education', payload, isEdit, editId);
+        const newStateObj = { ...saved, logoUrl: saved.logo_url || payload.logo_url, modules: parsedModules };
+        setEducationList(prev => isEdit ? prev.map(i => i.id === editId ? { ...i, ...newStateObj } : i) : [...prev, newStateObj]);
+        triggerToast(`Education ${isEdit ? 'Updated' : 'Added'}!`);
+      }
+      else if (modalType === 'cert') {
+        const payload = {
+          type: formData.type || 'badge',
+          title: (formData.title || '').trim(),
+          org: (formData.org || '').trim().toUpperCase(),
+          date: (formData.date || '').trim(),
+          credential_url: (formData.credentialUrl || '').trim(),
+          badge_logo_url: formData.badgeLogoUrl || '',
+          cert_image_url: formData.certImageUrl || ''
+        };
+        const saved = await saveRecord('certifications', payload, isEdit, editId);
+        const newStateObj = {
+          ...saved,
+          credentialUrl: saved.credential_url ?? payload.credential_url,
+          badgeLogoUrl: saved.badge_logo_url ?? payload.badge_logo_url,
+          certImageUrl: saved.cert_image_url ?? payload.cert_image_url
+        };
+        setCertifications(prev => isEdit ? prev.map(i => i.id === editId ? { ...i, ...newStateObj } : i) : [...prev, newStateObj]);
+        triggerToast(`Credential ${isEdit ? 'Updated' : 'Added'}!`);
+      }
+      else if (modalType === 'activity') {
+        const payload = {
+          type: (formData.type || 'Volunteering & Community').trim(),
+          title: (formData.title || '').trim(),
+          entity: (formData.entity || '').trim(),
+          period: (formData.period || '').trim(),
+          description: (formData.description || '').trim()
+        };
+        const saved = await saveRecord('activities', payload, isEdit, editId);
+        setCommunityActivities(prev => isEdit ? prev.map(i => i.id === editId ? { ...i, ...saved } : i) : [...prev, saved]);
+        triggerToast(`Activity ${isEdit ? 'Updated' : 'Added'}!`);
+      }
+      else if (modalType === 'testimonial') {
+        const payload = {
+          quote: (formData.quote || '').trim(),
+          author: (formData.author || '').trim(),
+          role: (formData.role || '').trim()
+        };
+        const saved = await saveRecord('testimonials', payload, isEdit, editId);
+        setTestimonials(prev => isEdit ? prev.map(i => i.id === editId ? { ...i, ...saved } : i) : [...prev, saved]);
+        triggerToast(`Endorsement ${isEdit ? 'Updated' : 'Added'}!`);
+      }
+      else if (modalType === 'cv_project') {
+        const payload = {
+          title: (formData.title || '').trim(),
+          date: (formData.date || '').trim(),
+          summary: (formData.summary || '').trim()
+        };
+        const saved = await saveRecord('cv_projects', payload, isEdit, editId);
+        setCvProjects(prev => isEdit ? prev.map(i => i.id === editId ? { ...i, ...saved } : i) : [...prev, saved]);
+        triggerToast('CV Project Saved!');
+      }
+      else if (modalType === 'cv_work') {
+        const payload = {
+          role: (formData.role || '').trim(),
+          company: (formData.company || '').trim(),
+          location: (formData.location || '').trim(),
+          period: (formData.period || '').trim(),
+          description: (formData.description || '').trim()
+        };
+        const saved = await saveRecord('cv_work', payload, isEdit, editId);
+        setCvWork(prev => isEdit ? prev.map(i => i.id === editId ? { ...i, ...saved } : i) : [...prev, saved]);
+        triggerToast('CV Experience Saved!');
+      }
+      else if (modalType === 'cv_education') {
+        const payload = {
+          degree: (formData.degree || '').trim(),
+          institution: (formData.institution || '').trim(),
+          location: (formData.location || '').trim(),
+          period: (formData.period || '').trim(),
+          key_points: (formData.keyPoints || '').trim()
+        };
+        const saved = await saveRecord('cv_education', payload, isEdit, editId);
+        const newState = { ...saved, keyPoints: saved.key_points ?? payload.key_points };
+        setCvEducation(prev => isEdit ? prev.map(i => i.id === editId ? { ...i, ...newState } : i) : [...prev, newState]);
+        triggerToast('CV Education Saved!');
+      }
+      else if (modalType === 'cv_ref') {
+        const payload = {
+          name: (formData.name || '').trim(),
+          designation: (formData.designation || '').trim(),
+          institution: (formData.institution || '').trim(),
+          contact: (formData.contact || '').trim()
+        };
+        const saved = await saveRecord('cv_references', payload, isEdit, editId);
+        setCvRefs(prev => isEdit ? prev.map(i => i.id === editId ? { ...i, ...saved } : i) : [...prev, saved]);
+        triggerToast('CV Reference Saved!');
+      }
+
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      triggerToast(`Database Error: ${err.message}`, true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteItem = async (table, id, stateSetter) => {
+    if (!supabase) {
+      triggerToast("Supabase client unavailable.", true);
+      return;
+    }
+
+    if (!window.confirm('Delete this record permanently from the database?')) return;
+
+    try {
+      const { error } = await supabase.from(table).delete().eq('id', id);
+      if (!error) {
+        stateSetter(prev => prev.filter(item => item.id !== id));
+        triggerToast('Record deleted.');
+      } else {
+        triggerToast(`Failed to delete: ${error.message}`, true);
+      }
+    } catch (err) {
+      triggerToast(`Error: ${err.message}`, true);
+    }
+  };
+
+  // Helper for adding hard skills to CV
+  const handleAddHardSkill = () => {
+    const trimmed = newHardSkill.trim();
+    if (!trimmed) return;
+    if (atsCvData.hardSkills.includes(trimmed)) {
+      triggerToast("Skill already added.", true);
+      return;
+    }
+    setAtsCvData({ ...atsCvData, hardSkills: [...atsCvData.hardSkills, trimmed] });
+    setNewHardSkill('');
+  };
+
+  // Helper for adding soft skills to CV
+  const handleAddSoftSkill = () => {
+    const trimmed = newSoftSkill.trim();
+    if (!trimmed) return;
+    if (atsCvData.softSkills.includes(trimmed)) {
+      triggerToast("Skill already added.", true);
+      return;
+    }
+    setAtsCvData({ ...atsCvData, softSkills: [...atsCvData.softSkills, trimmed] });
+    setNewSoftSkill('');
+  };
 }
