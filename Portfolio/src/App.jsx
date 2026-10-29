@@ -404,6 +404,7 @@ export default function PortfolioApp() {
           footer {
             display: none !important;
           }
+          #resume-print,
           #interview-cv-print {
             display: block !important;
             visibility: visible !important;
@@ -416,12 +417,14 @@ export default function PortfolioApp() {
             overflow: visible !important;
             box-sizing: border-box !important;
           }
+          #resume-print a,
           #interview-cv-print a {
             color: #111827 !important;
             text-decoration: underline !important;
             pointer-events: auto !important;
             cursor: pointer !important;
           }
+          #resume-print .cv-section,
           #interview-cv-print .cv-section {
             page-break-inside: avoid;
             break-inside: avoid;
