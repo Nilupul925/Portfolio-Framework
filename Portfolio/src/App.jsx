@@ -282,7 +282,7 @@ export default function PortfolioApp() {
       } else if (q.includes('contact') || q.includes('email') || q.includes('phone') || q.includes('location')) {
         reply = `Contact Channels:\n• Phone: ${profile.phone || 'Not yet included'}\n• Email: ${profile.email || 'Not yet included'}\n• LinkedIn: ${profile.linkedin || 'Not yet included'}\n• Location: ${profile.location || 'Not yet included'}`;
       } else {
-        reply = `I am connected to ${candidateName}'s live Supabase portfolio. Try asking about "projects", "skills", "experience", "education", "badges", "CV", or "contact"!`;
+        reply = `I am connected to ${candidateName}'s portfolio. Try asking about "projects", "skills", "experience", "education", "badges", "CV", or "contact"!`;
       }
 
       setBotMessages(prev => [...prev, { sender: 'bot', text: reply }]);
@@ -360,7 +360,7 @@ export default function PortfolioApp() {
     return (
       <div className="min-h-screen bg-[#070b14] flex flex-col items-center justify-center text-cyan-400 font-mono space-y-4">
         <div className="w-10 h-10 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-        <span className="text-sm tracking-wider animate-pulse">Loading Portfolio from Supabase...</span>
+        <span className="text-sm tracking-wider animate-pulse">Loading...</span>
       </div>
     );
   }
@@ -789,7 +789,7 @@ export default function PortfolioApp() {
                     <img
                       src={profile.avatarUrl}
                       alt={profile.name || 'Profile'}
-                      className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 transition-all duration-500"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <span className="text-xs font-mono text-slate-500 italic">Photo not yet included</span>
@@ -806,8 +806,8 @@ export default function PortfolioApp() {
           <section className="rounded-3xl bg-slate-950 border-2 border-cyan-500/40 p-4 sm:p-8 md:p-10 shadow-2xl relative space-y-6 sm:space-y-8 animate-in fade-in duration-300">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-800 gap-4 no-print">
               <div>
-                <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">• ATS-VERIFIED DOCUMENT</span>
-                <h3 className="text-xl font-bold text-white mt-1">Professional Resume</h3>
+                <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">• ATS-STANDARD</span>
+                <h3 className="text-xl font-bold text-white mt-1">My Professional Resume</h3>
               </div>
 
               <div className="flex items-center gap-3">
@@ -1403,7 +1403,7 @@ export default function PortfolioApp() {
           <div>
             <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">• REACH OUT</span>
             <h2 className="text-2xl sm:text-3xl font-bold text-white mt-1">Let's Connect & Collaborate</h2>
-            <p className="text-xs text-slate-400 mt-1">Available for Networking, cybersecurity and software engineering opportunities.</p>
+            <p className="text-xs text-slate-400 mt-1">Available for Networking, Cybersecurity and software engineering opportunities.</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -1435,7 +1435,7 @@ export default function PortfolioApp() {
 
               <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/50 border border-slate-800 flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <div className="text-slate-400 text-[10px]">PROFESSIONAL NETWORK</div>
+                  <div className="text-slate-400 text-[10px]">LINKEDIN PROFILE</div>
                   <div className="text-white font-bold mt-0.5 truncate">
                     {profile.linkedin ? cleanUrlDisplay(profile.linkedin) : <span className="text-slate-500 italic">Not yet included</span>}
                   </div>
